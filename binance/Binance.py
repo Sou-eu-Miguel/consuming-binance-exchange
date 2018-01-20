@@ -7,7 +7,7 @@ class Binance:
     api_root = "https://api.binance.com/"
     intervals = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '8h', '12h', '1d', '3d', '1w', '1M']
 
-    def __init__(self, symbol='ETHBTC', interval='1m', limit='200'):
+    def __init__(self, symbol='ETHBTC', interval='1m', limit=200):
         self.symbol = symbol
         self.interval = interval
         self.limit = limit
@@ -15,10 +15,14 @@ class Binance:
     def api_url(self, symbol='ETHBTC', interval='1m', limit=200):
         return self.api_root + ('api/v1/klines?symbol={}&interval={}&limit={}').format(symbol, interval, limit)
 
-    def get_closes(self, response):
+    def request_api(self, interval):
+        response = requests.get(self.api_url(interval=interval, limit=self.limit))
+        return response.json()
+
+    def get_closes(self, klines):
         list_closes = []
 
-        for item in response.json():
+        for item in klines:
             list_closes.append(float(item[4]))
 
         return list_closes
@@ -27,8 +31,8 @@ class Binance:
         close_map = {}
 
         for interval in intervals:
-            resp = requests.get(self.api_url(interval=interval, limit=self.limit))
-            close_map[interval] = self.get_closes(resp)
+            klines = self.request_api(interval)
+            close_map[interval] = self.get_closes(klines)
 
         return close_map
 
@@ -47,3 +51,7 @@ class Binance:
             sma.values.append(closes_mean)
 
         return sma
+
+
+if __name__ == '__main__':
+    b = Binance()
